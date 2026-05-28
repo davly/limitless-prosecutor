@@ -1,0 +1,14 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "limitless-prosecutor"
+version = "0.1.0"
+description = "Limitless Flagship: UK CPS / CPIA 1996 / PACE 1984 compliance forge (pure stdlib)"
+requires-python = ">=3.11"
+license = {file = "LICENSE"}
+keywords = ["cps", "cpia", "pace", "uk-criminal-justice", "compliance", "forge"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
