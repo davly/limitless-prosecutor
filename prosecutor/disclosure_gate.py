@@ -158,10 +158,18 @@ class DisclosureGate:
 
     def classify(self, request: DisclosureRequest) -> DisclosureOutcome:
         """Classify the request -> DisclosureOutcome."""
-        # 1. Freshness check (stale-first ordering)
+        # 1. Freshness check (stale-first ordering). age < 0 means the schedule is dated in
+        # the FUTURE (a data error) -- never certify that as fresh; treat as stale for re-check.
         age = (self._now - request.schedule_last_updated).days
-        if age > request.freshness_window_days:
+        if age > request.freshness_window_days or age < 0:
             return DisclosureOutcome.SCHEDULE_STALE
+        # 1b. An empty / never-populated schedule must NOT earn a clean bill of health. Under
+        # CPIA's flag-by-default duty an unpopulated schedule is incomplete -- exactly where human
+        # review is most needed -- yet the any()/empty-loop below would otherwise fall through to
+        # CPIA_COMPLIANT_FRESH (a falsely reassuring GREEN). Reuse the existing INCOMPLETE outcome
+        # (keeps the closed 4-value enum stable).
+        if not request.entries:
+            return DisclosureOutcome.UNUSED_MATERIAL_INCOMPLETE
         # 2. Sensitive-material flag (any sensitive entry OR pii_flagged)
         if any(
             e.category == MaterialCategory.SENSITIVE or e.is_pii_flagged
